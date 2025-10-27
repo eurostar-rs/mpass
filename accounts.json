@@ -8,5 +8,10 @@
     "name": "test",
     "issuer": "test",
     "secret": "tests"
+  },
+  {
+    "name": "antonie.butnariuc@stud.acs.upb.ro",
+    "issuer": "UPB",
+    "secret": "NU2US3LQPEYXGRLFJNZU4OCVJVRFMYTM"
   }
 ]
