@@ -115,8 +115,9 @@ fn register(mail: &str, password: &str) -> Result<String, String> {
             e
         }
     };
-    let salt = b"saltpassword12";
-    let key = derive_key(password, salt)
+    let mut salt = [0u8; 16];
+    OsRng.fill_bytes(&mut salt);
+    let key = derive_key(password, &salt)
         .map_err(|_| "Failed to derive key".to_string())?;
 
     if std::path::Path::new(&filename).exists() {
@@ -129,8 +130,11 @@ fn register(mail: &str, password: &str) -> Result<String, String> {
     
     let encrypted_data = encrypt_data(&data, &key)
         .map_err(|e| format!("Encryption failed: {}", e))?;
+
+    let mut file_content = salt.to_vec();
+    file_content.extend_from_slice(&encrypted_data);
     
-    fs::write(&filename, encrypted_data)
+    fs::write(&filename, file_content)
         .map_err(|e| format!("File write failed: {}", e))?;
     
     Ok(format!("Registration successful for {}", mail))
@@ -154,16 +158,22 @@ fn login(mail: &str, password: &str) -> Result<String, String> {
         }
     };
 
-    let salt = b"saltpassword12";
-    let key = derive_key(password, salt)
-        .map_err(|_| "Failed to derive key".to_string())?;
-
     if !std::path::Path::new(&filename).exists() {
         return Err("User not found".to_string());
     }
 
-    let encrypted_data = fs::read(&filename)
+    let file_content = fs::read(&filename)
         .map_err(|e| format!("Failed to read user data: {}", e))?;
+
+    if file_content.len() < 16 {
+        return Err("File corrupted".to_string());
+    }
+
+    let salt = &file_content[..16];
+    let encrypted_data = &file_content[16..];
+
+    let key = derive_key(password, salt)
+        .map_err(|_| "Failed to derive key".to_string())?;
     
     let decrypted_data = decrypt_data(&encrypted_data, &key)
         .map_err(|_| "Invalid password".to_string())?;
@@ -182,10 +192,20 @@ fn show_accounts(mail: &str, password: &str) -> Result<Vec<(String, String, Stri
             e
         }
     };
-    let salt = b"saltpassword12";
-    let key = derive_key(password, salt).map_err(|_| "Key derivation failed".to_string())?;
 
-    let encrypted_data = fs::read(&filename).map_err(|e| format!("Could not find data: {}", e))?;
+    let file_content = fs::read(&filename)
+        .map_err(|e| format!("Failed to read user data: {}", e))?;
+
+    if file_content.len() < 16 {
+         return Err("File corrupted: too short".to_string());
+    }
+
+    let salt = &file_content[..16];
+    let encrypted_data = &file_content[16..];
+
+    let key = derive_key(password, salt)
+        .map_err(|_| "Failed to derive key".to_string())?;
+
     let decrypted_data = decrypt_data(&encrypted_data, &key).map_err(|_| "Invalid password".to_string())?;
     
     let accounts: Vec<Account> =
@@ -234,16 +254,23 @@ fn add_account(mail: &str, password: &str, name: &str, issuer: &str, secret: &st
             e
         }
     };
-    let salt = b"saltpassword12";
-    let key = derive_key(password, salt).map_err(|_| "Key derivation failed".to_string())?;
 
-    // 2. Read existing accounts (ROBUST METHOD)
-    // This block tries to read and decrypt. If ANY step fails (file missing, empty, corrupt), 
-    // it defaults to a new empty list instead of crashing.
+    let file_content = fs::read(&filename)
+        .map_err(|e| format!("Failed to read user data: {}", e))?;
+
+    if file_content.len() < 16 {
+         return Err("File corrupted: too short".to_string());
+    }
+
+    // 2. EXTRACT SALT (First 16 bytes)
+    let salt = &file_content[..16];
+    let key = derive_key(password, salt)
+        .map_err(|_| "Failed to derive key".to_string())?;
+
+
     let mut accounts: Vec<Account> = if std::path::Path::new(&filename).exists() {
         let result = (|| -> Result<Vec<Account>, String> {
-            let encrypted_data = fs::read(&filename).map_err(|e| e.to_string())?;
-            
+            let encrypted_data = &file_content[16..];            
             // If file is empty (0 bytes), return empty list immediately
             if encrypted_data.is_empty() { return Ok(Vec::new()); }
 
