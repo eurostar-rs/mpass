@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MPass Authenticator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .register-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .login-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        .toggle-btn {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        .message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">MPass Authenticator</h1>
+    
+    <!-- Register Form -->
+    <div id="register-container" class="form-container">
+        <h2>Register</h2>
+        <input type="email" id="register-email" placeholder="Email" />
+        <input type="password" id="register-password" placeholder="Password" />
+        <button id="register-btn" class="register-btn">Create Account</button>
+        
+        <div id="register-message" class="message"></div>
+        
+        <p style="text-align: center; margin-top: 15px;">
+            Already have an account? 
+            <a href="#" id="show-login">Login here</a>
+        </p>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-container" class="form-container hidden">
+        <h2>Login</h2>
+        <input type="email" id="login-email" placeholder="Email" />
+        <input type="password" id="login-password" placeholder="Password" />
+        <button id="login-btn" class="login-btn">Login</button>
+        
+        <div id="login-message" class="message"></div>
+        
+        <p style="text-align: center; margin-top: 15px;">
+            Don't have an account? 
+            <a href="#" id="show-register">Register here</a>
+        </p>
+    </div>
+
+<div id="accounts-container" class="form-container hidden">
+    <h2>Your 2FA Codes</h2>
+    <div id="codes-list"></div>
+    
+    <button id="show-addacc-btn" class="toggle-btn" style="background-color: #2196F3; color: white; margin-top: 15px;">+ Add New Account</button>
+    <button id="refresh-btn" class="toggle-btn" style="background-color: #eee; margin-top: 5px;">Refresh Codes</button>
+    <button id="logout-btn" class="toggle-btn" style="margin-top: 5px; color: red;">Logout</button>
+</div>
+
+<div id="addacc-container" class="form-container hidden">
+    <h2>Add New Account</h2>
+    
+    <input type="text" id="new-issuer" placeholder="Issuer (e.g. Google, GitHub)" />
+    <input type="text" id="new-name" placeholder="Account Name (e.g. user@gmail.com)" />
+    <input type="text" id="new-secret" placeholder="Secret Key (Base32)" />
+    
+    <button id="save-account-btn" class="login-btn">Save Account</button>
+    <button id="cancel-add-btn" class="toggle-btn">Cancel</button>
+    
+    <div id="add-message" class="message"></div>
+</div>
+
+    <script src="main.js"></script>
+</body>
+</html>
